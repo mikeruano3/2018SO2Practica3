@@ -1,11 +1,70 @@
 !!!! COMANDOS !!!!
-tar xvzf fuse-tutorial.tgz 
+# instalando dependencias
+sudo apt-get install gcc fuse libfuse-dev make cmake openssl attr attr-dev libssl1.0.0 libssl-dev
 
-apt-get install gcc fuse libfuse-dev make cmake
+entrar al directorio CU-CS3753-PA
+./fusexmp /filesystem_201504429/ -o allow_other
+
+EJEMPLO TOMADO DE 
+https://github.com/asayler/CU-CS3753-PA5
+
+
+Build All:
+ make
+
+Build Fuse Examples and Utilities:
+ make fuse-examples
+
+Build xattr Examples and Utilities:
+ make xattr-examples
+
+Build OpenSSL/AES Examples and Utilities:
+ make openssl-examples
+
+Clean:
+ make clean
+
+***FUSE Examples***
+
+Mount fusehello on new directory
+ mkdir <Mount Point>
+ ./fusehello <Mount Point>
+
+Mount fusehello in Debug Mode on existing empty directory
+ ./fusehello -d <Mount Point>
+
+Mount fusexmp on existing directory and list (ls) mirrored root directory (/)
+ ./fusexmp <Mount Point>
+ ls <Mount Point>
+
+Unmount a FUSE filesystem
+ fusermount -u <Mount Point>
+
+
+
+
+
+
+
+
+!!!! OTROS EJEMPLOS !!!!
 
 EJEMPLO TOMADO DE:
 https://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/
 
+# instalando el ejemplo
+# tar xvzf fuse-tutorial.tgz 
+
+cd filesystem_201504429
+./configure
+make
+
+cd example
+
+#montando el ejemplo
+pwd
+ls -lR
+../src/bbfs /rootdir /mountdir
 
 # Fuse Example
 This is the companion code to my ["Write a filesystem with FUSE"](http://engineering.facile.it/blog/eng/write-filesystem-fuse/) blog post.
@@ -89,4 +148,6 @@ Building your own filesystem ... encontrado en ...
 https://github.com/libfuse/libfuse
 
 
+
+https://engineering.facile.it/blog/eng/write-filesystem-fuse/
 
