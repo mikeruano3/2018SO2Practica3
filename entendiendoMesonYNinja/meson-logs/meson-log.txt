@@ -1,0 +1,23 @@
+Build started at 2018-09-14T17:41:57.148077
+Python binary: /usr/bin/python3
+Python system: Linux
+The Meson build system
+Version: 0.29.0
+Source dir: /home/miguel/Escritorio/SOPES/Practica3_2s2018/builddir
+Build dir: /home/miguel/Escritorio/SOPES/Practica3_2s2018
+Build type: native build
+Build machine cpu family: x86_64
+Build machine cpu: x86_64
+Project name: filesystem_201504429
+Sanity testing C compiler: cc
+Is cross compiler: False.
+Sanity check compiler command line: cc /home/miguel/Escritorio/SOPES/Practica3_2s2018/meson-private/sanitycheckc.c -o /home/miguel/Escritorio/SOPES/Practica3_2s2018/meson-private/sanitycheckc
+Sanity check compile stdout:
+
+-----
+Sanity check compile stderr:
+
+-----
+Running test binary command: /home/miguel/Escritorio/SOPES/Practica3_2s2018/meson-private/sanitycheckc
+Native c compiler: cc (gcc 5.4.0-6ubuntu1)
+Build targets in project: 1

@@ -1,0 +1,92 @@
+!!!! COMANDOS !!!!
+tar xvzf fuse-tutorial.tgz 
+
+apt-get install gcc fuse libfuse-dev make cmake
+
+EJEMPLO TOMADO DE:
+https://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/
+
+
+# Fuse Example
+This is the companion code to my ["Write a filesystem with FUSE"](http://engineering.facile.it/blog/eng/write-filesystem-fuse/) blog post.
+
+
+!!!! NO HACER DE AQUI PARA ABAJO !!!!
+
+!!!!PRACTICANDO MESON, NINJA Y FUSE!!!!
+
+mkdir builddir
+cd builddir
+file: meson.build
+        project('fuse_201504429', 'c')
+        executable('sistema', 'main.c')
+file: main.c
+        #include<stdio.h>
+        int main(int argc, char **argv) {
+        printf("Hello there.\n");
+        return 0;
+        }
+cd ..
+..atras
+
+meson builddir !para iniciar meson
+
+cd builddir
+file: build.ninja
+    rule cc
+      command = gcc -c -o $out $in
+      description = CC $out
+    
+    rule link
+      command = gcc -o $out $in
+      description = LINK $out
+    
+    build source1.o: cc source1.c
+    build fuse_201504429: link source1.o
+
+ninja ! para iniciar ninja
+
+!!!! COMANDOS UTILIZADOS !!!!
+Instalar meson
+http://mesonbuild.com/Quick-guide.html
+sudo apt-get install python3 python3-pip ninja-build
+sudo pip install --upgrade pip
+sudo pip3 install --user meson
+
+descargar libfuse 3.2.6 formato tar.xz
+https://github.com/libfuse/libfuse/releases
+
+# en el directorio de la descarga
+tar -Jxvf fuse-3.2.6.tar.xz 
+cd fuse-3.2.6 
+
+https://github.com/libfuse/libfuse
+
+mkdir build; cd build
+meson ..
+
+meson configure # list options
+meson configure -D disable-mtab=true
+
+ninja
+sudo python3 -m pytest test/
+sudo ninja install
+
+https://docs.pytest.org/en/latest/getting-started.html
+sudo pip install -U pytest
+pytest --version
+
+#siguiendo dentro de build
+sudo chown root:root util/fusermount3
+sudo chmod 4755 util/fusermount3
+python3 -m pytest test/
+
+#HECHO !!!
+
+#AHORA LEA LA DOCUMENTACION DE LA API
+
+Building your own filesystem ... encontrado en ...
+https://github.com/libfuse/libfuse
+
+
+

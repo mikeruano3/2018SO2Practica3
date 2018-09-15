@@ -1,0 +1,7 @@
+[
+  {
+    "directory": "/home/miguel/Escritorio/SOPES/Practica3_2s2018",
+    "command": "cc  '-pipe' '-Wall' '-Winvalid-pch' '-g' '-Ifuse_201504429@exe' '-Ibuilddir' '-I.' '-MMD' '-MQ' 'fuse_201504429@exe/main.c.o' '-MF' 'fuse_201504429@exe/main.c.o.d' -o 'fuse_201504429@exe/main.c.o' -c builddir/main.c",
+    "file": "builddir/main.c"
+  }
+]

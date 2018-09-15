@@ -1,0 +1,10 @@
+rule cc
+  command = gcc -c -o $out $in
+  description = CC $out
+    
+rule link
+  command = gcc -o $out $in
+  description = LINK $out
+    
+build source1.o: cc main.c
+build fuse_201504429: link source1.o
