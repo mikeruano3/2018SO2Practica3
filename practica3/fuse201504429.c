@@ -10,7 +10,7 @@
   This program can be distributed under the terms of the GNU GPL.
   See the file COPYING.
 
-  gcc -Wall `pkg-config fuse --cflags` fusexmp.c -o fusexmp `pkg-config fuse --libs`
+  gcc -Wall `pkg-config fuse --cflags` fuse201504429.c -o fuse201504429 `pkg-config fuse --libs`
 
   Note: This implementation is largely stateless and does not maintain
         open file handels between open and release calls (fi->fh).
@@ -377,6 +377,22 @@ static int xmp_removexattr(const char *path, const char *name)
 }
 #endif /* HAVE_SETXATTR */
 
+static void *inicializador(void)
+{
+  printf("Init\n");
+  fchdir(save_dir);
+  close(save_dir);
+  fuse_mkdir("/usr",0777);
+  fuse_mkdir("/usr/gustavo_gamboa",0777);
+  fuse_mkdir("/usr/gustavo_gamboa/desktop",0777);
+  fuse_mkdir("/tmp",0777);
+  fuse_mkdir("/etc",0777);
+  fuse_mkdir("/home",0777);
+  fuse_mknod("/home/archivo",0777,0x0001);
+  fuse_mkdir("/lib",0777);
+  return NULL;
+}
+
 static struct fuse_operations xmp_oper = {
 	.getattr	= xmp_getattr,
 	.access		= xmp_access,
@@ -408,8 +424,11 @@ static struct fuse_operations xmp_oper = {
 #endif
 };
 
+
 int main(int argc, char *argv[])
 {
 	umask(0);
-	return fuse_main(argc, argv, &xmp_oper, NULL);
+	fuse_main(argc, argv, &xmp_oper, NULL);
+	inicializador();
+	return 0;
 }
