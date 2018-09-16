@@ -10,7 +10,8 @@
   This program can be distributed under the terms of the GNU GPL.
   See the file COPYING.
 
-  gcc -Wall `pkg-config fuse --cflags` fuse201504429.c -o fuse201504429 `pkg-config fuse --libs`
+  gcc -Wall `pkg-config fuse --cflags` fuse201504429.c -o fuse201504429.o `pkg-config fuse --libs`
+
 
   Note: This implementation is largely stateless and does not maintain
         open file handels between open and release calls (fi->fh).
@@ -33,7 +34,8 @@
 /* For pread()/pwrite() */
 #define _XOPEN_SOURCE 500
 #endif
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <fuse.h>
 #include <stdio.h>
 #include <string.h>
@@ -380,16 +382,14 @@ static int xmp_removexattr(const char *path, const char *name)
 static void *inicializador(void)
 {
   printf("Init\n");
-  fchdir(save_dir);
-  close(save_dir);
-  fuse_mkdir("/usr",0777);
-  fuse_mkdir("/usr/gustavo_gamboa",0777);
-  fuse_mkdir("/usr/gustavo_gamboa/desktop",0777);
-  fuse_mkdir("/tmp",0777);
-  fuse_mkdir("/etc",0777);
-  fuse_mkdir("/home",0777);
-  fuse_mknod("/home/archivo",0777,0x0001);
-  fuse_mkdir("/lib",0777);
+  xmp_mkdir("/usr",0777);
+  xmp_mkdir("/usr/gustavo_gamboa",0777);
+  xmp_mkdir("/usr/gustavo_gamboa/desktop",0777);
+  xmp_mkdir("/tmp",0777);
+  xmp_mkdir("/etc",0777);
+  xmp_mkdir("/home",0777);
+  xmp_mknod("/home/archivo",0777,0x0001);
+  xmp_mkdir("/lib",0777);
   return NULL;
 }
 
@@ -429,6 +429,7 @@ int main(int argc, char *argv[])
 {
 	umask(0);
 	fuse_main(argc, argv, &xmp_oper, NULL);
+	fprintf(stderr, "Key_str must not be NULL\n");
 	inicializador();
 	return 0;
 }
