@@ -42,19 +42,39 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <stdlib.h>
+
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
 #endif
+#define long_path 512
+static int dir_de_guardado;
+static char mountpoint[long_path] ={'\0'};
+static char directorio_inicial[long_path] ={'\0'};
+
+const char *sacarpath(const char *path);
 
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
 	int res;
-
+	path = sacarpath(path);
+	printf("directorio de montaje %s\n",path);
 	res = lstat(path, stbuf);
 	if (res == -1)
 		return -errno;
 
 	return 0;
+}
+const char *sacarpath(const char *path)
+{
+  char *temp, *buffer;
+  buffer = strdup(path+1); 
+  temp = buffer + strlen(buffer) - 1; 
+  if (*temp == '/') 
+  	*temp = '\0'; 
+  if (*buffer == '\0') 
+  	strcpy(buffer, "."); 
+  return buffer;
 }
 
 static int xmp_access(const char *path, int mask)
@@ -379,21 +399,19 @@ static int xmp_removexattr(const char *path, const char *name)
 
 static void *inicializador(void)
 {
-  printf("Init\n");
-  fchdir(save_dir);
-  close(save_dir);
-  fuse_mkdir("/usr",0777);
-  fuse_mkdir("/usr/gustavo_gamboa",0777);
-  fuse_mkdir("/usr/gustavo_gamboa/desktop",0777);
-  fuse_mkdir("/tmp",0777);
-  fuse_mkdir("/etc",0777);
-  fuse_mkdir("/home",0777);
-  fuse_mknod("/home/archivo",0777,0x0001);
-  fuse_mkdir("/lib",0777);
+  xmp_mkdir("/usr",0777);
+  xmp_mkdir("/usr/gustavo_gamboa",0777);
+  xmp_mkdir("/usr/gustavo_gamboa/desktop",0777);
+  xmp_mkdir("/tmp",0777);
+  xmp_mkdir("/etc",0777);
+  xmp_mkdir("/home",0777);
+  xmp_mknod("/home/archivo",0777,0x0001);
+  xmp_mkdir("/lib",0777);
   return NULL;
 }
 
 static struct fuse_operations xmp_oper = {
+	.init 		= inicializador,
 	.getattr	= xmp_getattr,
 	.access		= xmp_access,
 	.readlink	= xmp_readlink,
@@ -428,7 +446,8 @@ static struct fuse_operations xmp_oper = {
 int main(int argc, char *argv[])
 {
 	umask(0);
-	fuse_main(argc, argv, &xmp_oper, NULL);
-	inicializador();
-	return 0;
+	getcwd(directorio_inicial, long_path);
+	strncpy(mountpoint, argv[1], strlen(argv[1]));
+    dir_de_guardado = open(mountpoint, O_RDONLY);
+	return 	fuse_main(argc, argv, &xmp_oper, NULL);
 }
