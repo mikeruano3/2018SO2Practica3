@@ -5,5 +5,4 @@ rm -rf fuse201504429
 rm -rf fuse201504429.o
 sudo rmdir /filesystem_201504429
 sudo mkdir /filesystem_201504429
-sudo chmod +777 /filesystem_201504429
 ./fuse201504429 /filesystem_201504429/ -o allow_other
