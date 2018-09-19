@@ -377,7 +377,14 @@ static int xmp_removexattr(const char *path, const char *name)
 }
 
 static int xmp_init(){
-	opendir("/filesystem_201504429");
+	 xmp_mkdir("/filesystem_201504429/usr",0777);
+	 xmp_mkdir("/filesystem_201504429/usr/gustavo_gamboa",0777);
+	 xmp_mkdir("/filesystem_201504429/usr/gustavo_gamboa/desktop",0777);
+	 xmp_mkdir("/filesystem_201504429/tmp",0777);
+	 xmp_mkdir("/filesystem_201504429/etc",0777);
+	 xmp_mkdir("/filesystem_201504429/home",0777);
+	 xmp_mknod("/filesystem_201504429/home/archivo",0777,0x0001);
+	 xmp_mkdir("/filesystem_201504429/lib",0777);
 	return 0;
 }
 

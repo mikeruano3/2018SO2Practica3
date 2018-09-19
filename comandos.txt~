@@ -3,15 +3,21 @@
 sudo apt-get install gcc fuse libfuse-dev make cmake openssl attr attr-dev libssl1.0.0 libssl-dev
 sudo apt-get install fuse-utils
 
-entrar al directorio practica3
-  gcc -Wall `pkg-config fuse --cflags` fuse201504429.c -o fuse201504429 `pkg-config fuse --libs`
-	gcc -Wall `pkg-config fuse --cflags` fusexmp.c -o fusexmp `pkg-config fuse --libs`
+entrar al directorio practica3 y compilar el .o
+gcc -Wall `pkg-config fuse --cflags` fuse201504429.c -o fuse201504429 `pkg-config fuse --libs`
 
-./fuse201504429 -d /filesystem_201504429/ -o allow_other
+montar el .o en una carpeta cualquiera del disco C
+-d es para debuggear
+mkdir /montar
+./fuse201504429 -d /montar/ 
+
+cd /montar/
+cd /filesystem_201504429
 
 EJEMPLO TOMADO DE 
 https://github.com/asayler/CU-CS3753-PA5
-
+https://www.cs.hmc.edu/~geoff/classes/hmc.cs135.201109/homework/fuse/fuse_doc.html
+https://www.cs.hmc.edu/~geoff/classes/hmc.cs135.201001/homework/fuse/fuse_doc.html
 
 Build All:
  make
