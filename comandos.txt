@@ -1,11 +1,13 @@
 !!!! COMANDOS !!!!
 # instalando dependencias
 sudo apt-get install gcc fuse libfuse-dev make cmake openssl attr attr-dev libssl1.0.0 libssl-dev
+sudo apt-get install fuse-utils
 
 entrar al directorio practica3
   gcc -Wall `pkg-config fuse --cflags` fuse201504429.c -o fuse201504429 `pkg-config fuse --libs`
+  gcc -Wall `pkg-config fuse --cflags` fusexmp.c -o fusexmp `pkg-config fuse --libs`
 
-./fuse201504429 /filesystem_201504429/ -o allow_other
+./fuse201504429 -d /filesystem_201504429/ -o allow_other
 
 EJEMPLO TOMADO DE 
 https://github.com/asayler/CU-CS3753-PA5

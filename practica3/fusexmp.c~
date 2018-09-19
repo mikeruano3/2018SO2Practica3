@@ -375,15 +375,22 @@ static int xmp_removexattr(const char *path, const char *name)
 		return -errno;
 	return 0;
 }
+
+static int xmp_init(){
+	opendir("/filesystem_201504429", 0);
+	return 0;
+}
+
 #endif /* HAVE_SETXATTR */
 
 static struct fuse_operations xmp_oper = {
+	.init		= xmp_init,
 	.getattr	= xmp_getattr,
 	.access		= xmp_access,
 	.readlink	= xmp_readlink,
 	.readdir	= xmp_readdir,
 	.mknod		= xmp_mknod,
-	.mkdir		= xmp_mkdir,  
+	.mkdir		= xmp_mkdir,
 	.symlink	= xmp_symlink,
 	.unlink		= xmp_unlink,
 	.rmdir		= xmp_rmdir,
