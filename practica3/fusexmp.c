@@ -45,7 +45,7 @@
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
 #endif
-
+//static const char *practica_path = "/filesystem_201504429";
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
 	int res;
@@ -60,10 +60,12 @@ static int xmp_getattr(const char *path, struct stat *stbuf)
 static int xmp_access(const char *path, int mask)
 {
 	int res;
-
 	res = access(path, mask);
-	if (res == -1)
+	fprintf(stderr, "Accediendo a %s\n", path);
+	if (res == -1){
+		fprintf(stderr, "Error de acceso a %s\n", path);
 		return -errno;
+	}
 
 	return 0;
 }
@@ -376,15 +378,16 @@ static int xmp_removexattr(const char *path, const char *name)
 	return 0;
 }
 
-static int xmp_init(){
-	 xmp_mkdir("/filesystem_201504429/usr",0777);
-	 xmp_mkdir("/filesystem_201504429/usr/gustavo_gamboa",0777);
-	 xmp_mkdir("/filesystem_201504429/usr/gustavo_gamboa/desktop",0777);
-	 xmp_mkdir("/filesystem_201504429/tmp",0777);
-	 xmp_mkdir("/filesystem_201504429/etc",0777);
-	 xmp_mkdir("/filesystem_201504429/home",0777);
-	 xmp_mknod("/filesystem_201504429/home/archivo",0777,0x0001);
-	 xmp_mkdir("/filesystem_201504429/lib",0777);
+static void* xmp_init(struct fuse_conn_info *conn){
+	xmp_mkdir("/filesystem_201504429/usr",0777);
+	xmp_mkdir("/filesystem_201504429/usr/gustavo_gamboa",0777);
+	xmp_mkdir("/filesystem_201504429/usr/gustavo_gamboa/desktop",0777);
+	xmp_mkdir("/filesystem_201504429/tmp",0777);
+	xmp_mkdir("/filesystem_201504429/etc",0777);
+	xmp_mkdir("/filesystem_201504429/home",0777);
+	xmp_mknod("/filesystem_201504429/home/archivo",0777,0x0001);
+	xmp_mkdir("/filesystem_201504429/lib",0777);
+	xmp_access("/filesystem_201504429/", 0777);
 	return 0;
 }
 
@@ -425,5 +428,6 @@ static struct fuse_operations xmp_oper = {
 int main(int argc, char *argv[])
 {
 	umask(0);
+	fprintf(stderr, "Inicializando...\n");
 	return fuse_main(argc, argv, &xmp_oper, NULL);
 }
