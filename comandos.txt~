@@ -4,15 +4,16 @@ sudo apt-get install gcc fuse libfuse-dev make cmake openssl attr attr-dev libss
 sudo apt-get install fuse-utils
 
 entrar al directorio practica3 y compilar el .o
-gcc -Wall `pkg-config fuse --cflags` fuse201504429.c -o fuse201504429 `pkg-config fuse --libs`
+gcc -Wall `pkg-config fuse --cflags` fuse201503666.c -o fuse201503666 `pkg-config fuse --libs`
 
 montar el .o en una carpeta cualquiera del disco C
 -d es para debuggear
 mkdir /montar
-./fuse201504429 -d /montar/ 
+chmod +777 /montar
+./fuse201503666 -d /montar/ 
 
 cd /montar/
-cd /filesystem_201504429
+cd /filesystem_201503666
 
 EJEMPLO TOMADO DE 
 https://github.com/asayler/CU-CS3753-PA5
@@ -65,7 +66,7 @@ https://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/
 # instalando el ejemplo
 # tar xvzf fuse-tutorial.tgz 
 
-cd filesystem_201504429
+cd filesystem_201503666
 ./configure
 make
 
@@ -87,7 +88,7 @@ This is the companion code to my ["Write a filesystem with FUSE"](http://enginee
 mkdir builddir
 cd builddir
 file: meson.build
-        project('fuse_201504429', 'c')
+        project('fuse_201503666', 'c')
         executable('sistema', 'main.c')
 file: main.c
         #include<stdio.h>
@@ -111,7 +112,7 @@ file: build.ninja
       description = LINK $out
     
     build source1.o: cc source1.c
-    build fuse_201504429: link source1.o
+    build fuse_201503666: link source1.o
 
 ninja ! para iniciar ninja
 

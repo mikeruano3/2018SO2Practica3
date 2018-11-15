@@ -59,7 +59,7 @@
 #endif
 
 DIR *save_dir;
-
+int fd_log;
 /******************************************************************/
 /*****************************************************************/
 /*****************************************************************/
@@ -251,6 +251,39 @@ static int xmp_unlink(const char *path)
 	//if (res == -1)
 	//	return -errno;
 
+	char cadena[strlen(path)+1];
+	strcpy(cadena, path);
+	char *ptrToken; // crea un apuntador char 
+	char acumulado[strlen(path)+1];
+	ptrToken = strtok( cadena, "/" ); 
+	//int res;
+	while ( ptrToken != NULL ) { 
+        strcpy(acumulado, ptrToken);
+        ptrToken = strtok( NULL, "/" );
+	}  
+	fprintf(stderr, "\n\n");
+	fprintf(stderr, "*********************************************\n");
+	fprintf(stderr, "**   MOVIENDO A LA PAPELERA DE RECICLAJE   **\n");
+	fprintf(stderr, "**   NOMBRE DEL ARCHIVO: %s\n", acumulado);
+	fprintf(stderr, "*********************************************\n");
+	
+	char *pathRecycle = "/filesystem_201504429/recycle/";
+	int tamPathRecycle = strlen(pathRecycle) + strlen(acumulado) + 1;
+	
+	char pathRecycleArchivo[tamPathRecycle];
+	strcpy(pathRecycleArchivo, pathRecycle);
+	strcat(pathRecycleArchivo, acumulado);
+	fprintf(stderr, "\n'%s' -> '%s'\n\n", path, pathRecycleArchivo);
+
+	rename(path, pathRecycleArchivo);
+	int tamNuevaL = strlen(acumulado)+1+1+strlen(path)+1;
+	char nuevalinea[tamNuevaL];
+	strcpy(nuevalinea, acumulado);
+	strcat(nuevalinea, ",");
+	strcat(nuevalinea, path);
+	strcat(nuevalinea, "\n");
+	nuevalinea[tamNuevaL] = '\0';
+	write(fd_log, nuevalinea, tamNuevaL);
 	return 0;
 }
 
@@ -486,6 +519,8 @@ static int xmp_removexattr(const char *path, const char *name)
 }
 
 static void* xmp_init(struct fuse_conn_info *conn){
+	fchdir(save_dir);
+	close(save_dir);
 	fprintf(stderr, "Inicializando...\n");
 	xmp_mkdir_init("/filesystem_201504429/usr",0777);
 	xmp_mkdir_init("/filesystem_201504429/usr/gustavo_gamboa",0777);
@@ -494,8 +529,10 @@ static void* xmp_init(struct fuse_conn_info *conn){
 	xmp_mkdir_init("/filesystem_201504429/etc",0777);
 	xmp_mkdir_init("/filesystem_201504429/home",0777);
 	xmp_mkdir_init("/filesystem_201504429/lib",0777);
+	xmp_mkdir_init("/filesystem_201504429/recycle",0777);
+
 //	xmp_create("/filesystem_201504429/home/archivo",0777,stdout);
-	xmp_access("/filesystem_201504429/", umask(0));
+	//xmp_access("/filesystem_201504429/", 0);
 	
 	const char *data = "Gustavo Adolfo Gamboa Cruz \n 201504429 \n";
 	int tamano = strlen(data);
@@ -509,6 +546,12 @@ static void* xmp_init(struct fuse_conn_info *conn){
 		fprintf(stderr, "Error escribiendo archivo. \n");
 		return 0;
 	}
+	fd_log = creat("/home/miguel/Escritorio/log.csv",0777);
+	if(fd_log == -1){
+		fprintf(stderr, "Error creando archivo de LOG \n");
+		return 0;
+	}
+
 	return 0;
 }
 
@@ -549,9 +592,6 @@ static struct fuse_operations xmp_oper = {
 int main(int argc, char *argv[])
 {
 	umask(0);
-	if(save_dir = opendir("/filesystem_201504429") == NULL){
-		fprintf(stderr, "No se puede abrir el directorio. \n");
-	}
-	
+	save_dir = open("/filesystem_201504429", 0);
 	return fuse_main(argc, argv, &xmp_oper, NULL);
 }
