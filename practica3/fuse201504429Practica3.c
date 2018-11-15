@@ -132,8 +132,27 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev)
 
 static int xmp_mkdir(const char *path, mode_t mode)
 {
-	int res;
+	char tmp[256];
+	char *p = NULL;
+	size_t len;
 
+	snprintf(tmp, sizeof(tmp), "%s", path);
+	len = strlen(tmp);
+	if(tmp[len - 1] == '/')
+		tmp[len  - 1] = 0;
+	for(p = tmp + 1; *p; p++)
+		if(*p == '/'){
+			*p = 0;
+			mkdir(tmp, S_IRWXU);
+			*p = '/';
+		}
+	mkdir(tmp, S_IRWXU);
+	return 0;
+}
+
+static int xmp_mkdir_init(const char *path, mode_t mode)
+{
+	int res;
 	res = mkdir(path, mode);
 	if (res == -1){
 	fprintf(stderr, "Error creando directorio...%s\n", path);
@@ -141,6 +160,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
 	}
 	return 0;
 }
+
 
 static int xmp_unlink(const char *path)
 {
@@ -382,13 +402,13 @@ static int xmp_removexattr(const char *path, const char *name)
 
 static void* xmp_init(struct fuse_conn_info *conn){
 	fprintf(stderr, "Inicializando...\n");
-	xmp_mkdir("/filesystem_201504429/usr",0777);
-	xmp_mkdir("/filesystem_201504429/usr/gustavo_gamboa",0777);
-	xmp_mkdir("/filesystem_201504429/usr/gustavo_gamboa/desktop",0777);
-	xmp_mkdir("/filesystem_201504429/tmp",0777);
-	xmp_mkdir("/filesystem_201504429/etc",0777);
-	xmp_mkdir("/filesystem_201504429/home",0777);
-	xmp_mkdir("/filesystem_201504429/lib",0777);
+	xmp_mkdir_init("/filesystem_201504429/usr",0777);
+	xmp_mkdir_init("/filesystem_201504429/usr/gustavo_gamboa",0777);
+	xmp_mkdir_init("/filesystem_201504429/usr/gustavo_gamboa/desktop",0777);
+	xmp_mkdir_init("/filesystem_201504429/tmp",0777);
+	xmp_mkdir_init("/filesystem_201504429/etc",0777);
+	xmp_mkdir_init("/filesystem_201504429/home",0777);
+	xmp_mkdir_init("/filesystem_201504429/lib",0777);
 //	xmp_create("/filesystem_201504429/home/archivo",0777,stdout);
 	xmp_access("/filesystem_201504429/", 0);
 	
@@ -416,7 +436,7 @@ static struct fuse_operations xmp_oper = {
 	.readlink	= xmp_readlink,
 	.readdir	= xmp_readdir,
 	.mknod		= xmp_mknod,
-	.mkdir		= xmp_mkdir,
+	.mkdir		= xmp_mkdir_init,
 	.symlink	= xmp_symlink,
 	.unlink		= xmp_unlink,
 	.rmdir		= xmp_rmdir,

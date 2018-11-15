@@ -134,30 +134,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
 {
 	int res;
 	res = mkdir(path, mode);
-	char cadena[strlen(path)+1];
-	strcpy(cadena, path);
-	fprintf(stderr, "Empezar\n");
-	char *ptrToken; /* crea un apuntador char */
-	char acumulado[strlen(path)+1];
-	ptrToken = strtok( cadena, "/" ); 
-	strcpy(acumulado, "");
-	while ( ptrToken != NULL ) { 
-	   fprintf(stderr, "->%s\n", ptrToken );
-           strcat(acumulado, "/");
-           strcat(acumulado, ptrToken);
-	   fprintf(stderr, "Acumulado--->%s\n", acumulado);
-		res = mkdir(acumulado, mode);
-		fprintf(stderr, "Creado\n");
-		if (res == -1){
-		fprintf(stderr, "Error creando directorio...%s\n", path);
-		}
-
-           ptrToken = strtok( NULL, "/" );
-	} 
-
-	fprintf(stderr, "Creado\n");
 	if (res == -1){
-	fprintf(stderr, "Error creando directorio...%s\n", path);
 		return -errno;
 	}
 	return 0;
