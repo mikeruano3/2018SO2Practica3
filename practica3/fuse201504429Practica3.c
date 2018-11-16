@@ -130,23 +130,114 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev)
 	return 0;
 }
 
+static int mkpath(const char *s, mode_t mode){
+        char *q, *r = NULL, *path = NULL, *up = NULL;
+        int rv;
+        rv = -1;
+        if (strcmp(s, ".") == 0 || strcmp(s, "/") == 0)
+                return (0);
+        if ((path = strdup(s)) == NULL)
+                exit(1);
+        if ((q = strdup(s)) == NULL)
+                exit(1);
+        if ((r = dirname(q)) == NULL)
+                goto out;
+        if ((up = strdup(r)) == NULL)
+                exit(1);
+        if ((mkpath(up, mode) == -1) && (errno != EEXIST))
+                goto out;
+        if ((mkdir(path, mode) == -1) && (errno != EEXIST))
+                rv = -1;
+        else
+                rv = 0;
+out:
+        if (up != NULL)
+              free(up);
+        free(q);
+        free(path);
+        return (rv);
+}
+
+
+
 static int xmp_mkdir(const char *path, mode_t mode)
 {
-	char tmp[256];
-	char *p = NULL;
-	size_t len;
+	/*
+	fprintf(stderr, "!mkdir! %s\n", path);
+	char cadena[strlen(path)+1];
+	strcpy(cadena, path);
+	fprintf(stderr, ".............Creando directorios anidados............\n");
+	char *ptrToken; // crea un apuntador char 
+	char acumulado[strlen(path)+1];
+	ptrToken = strtok( cadena, "/" ); 
+	strcpy(acumulado, "");
+	int res, resacc, resmkd;
+	struct stat buf;
+	struct fuse *f;
 
-	snprintf(tmp, sizeof(tmp), "%s", path);
-	len = strlen(tmp);
-	if(tmp[len - 1] == '/')
-		tmp[len  - 1] = 0;
-	for(p = tmp + 1; *p; p++)
-		if(*p == '/'){
-			*p = 0;
-			mkdir(tmp, S_IRWXU);
-			*p = '/';
+	while ( ptrToken != NULL ) { 
+	   	fprintf(stderr, "Analizando => %s\n", ptrToken );
+        strcat(acumulado, "/");
+        strcat(acumulado, ptrToken);
+	   	fprintf(stderr, "..Acumulado ---> %s\n", acumulado);
+		memset(&buf, 0, sizeof(buf));		
+		DIR* dir = opendir(acumulado);
+		if(dir)
+		{
+			closedir(dir);
+		}else if (ENOENT == errno)
+		{
+			resmkd = mkdir(acumulado, mode);
+			if (resmkd == -1){
+				fprintf(stderr, "Error creando directorio...%s\n", path);
+			}else{
+				fprintf(stderr, "Directorio creado...%s\n", path);
+			}
+		}else
+		{
+		
+
 		}
-	mkdir(tmp, S_IRWXU);
+		res = lstat(acumulado, &buf);
+		if (res == -1){
+			fprintf(stderr, "No existe el directorio...%s\n", path);
+			resmkd = mkdir(acumulado, mode);
+			if (resmkd == -1){
+				fprintf(stderr, "Error creando directorio...%s\n", path);
+			}else{
+				fprintf(stderr, "Directorio creado...%s\n", path);
+			}
+			resacc = access(acumulado, fuse_get_context()->umask);
+			if (resacc == -1){
+				fprintf(stderr, "Error de acceso a %s\n", path);
+			}
+		}else{
+			fprintf(stderr, "Existe...%s\n", acumulado);
+			resacc = access(acumulado, fuse_get_context()->umask);
+			if (resacc == -1){
+				fprintf(stderr, "Error de acceso a %s\n", path);
+			}
+		}
+		/ *res = access(acumulado, fuse_get_context()->umask);
+		fprintf(stderr, "!access! %s\n", path);
+		if (res == -1){
+			fprintf(stderr, "Error de acceso a %s\n", path);
+		}
+		res = mkdir(acumulado, mode);
+		if (res == -1){
+			fprintf(stderr, "Error creando directorio...%s\n", path);
+		}else{
+			fprintf(stderr, "Directorio creado...%s\n", path);
+		}
+        ptrToken = strtok( NULL, "/" );
+	} 
+	*/
+		int res;
+	res = mkdir(path, mode);
+	if (res == -1){
+		fprintf(stderr, "Error creando directorio...%s\n", path);
+		return -errno;
+	}
 	return 0;
 }
 
