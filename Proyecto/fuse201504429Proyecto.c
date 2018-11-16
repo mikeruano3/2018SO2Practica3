@@ -61,7 +61,7 @@
 DIR *save_dir;
 int tamanoBufferLog = 0;
 char *archivo_log = "/home/miguel/Escritorio/log.csv";
-char *pathRecycle = "/filesystem_201504429/recycle/";
+char *pathRecycle = "/filesystem_201504429/recycle";
 char *ultimoPathAccedido;
 int NUM_REGISTROS_MAX = 1000;
 /******************************************************************/
@@ -90,7 +90,7 @@ static int xmp_access(const char *path, int mask)
 		return -errno;
 	}
 	if(mask == 1){
-		ultimoPathAccedido = (char *) calloc(strlen(path), sizeof(char));
+		ultimoPathAccedido = (char *) calloc(strlen(path) + 1, sizeof(char));
 		strcpy(ultimoPathAccedido, path);
 	}
 	return 0;
@@ -153,6 +153,35 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev)
 		return -errno;
 
 	return 0;
+}
+
+/* Function with behaviour like `mkdir -p'  */
+static int mkpath(const char *s, mode_t mode){
+        char *q, *r = NULL, *path = NULL, *up = NULL;
+        int rv;
+        rv = -1;
+        if (strcmp(s, ".") == 0 || strcmp(s, "/") == 0)
+                return (0);
+        if ((path = strdup(s)) == NULL)
+                exit(1);
+        if ((q = strdup(s)) == NULL)
+                exit(1);
+        if ((r = dirname(q)) == NULL)
+                goto out;
+        if ((up = strdup(r)) == NULL)
+                exit(1);
+        if ((mkpath(up, mode) == -1) && (errno != EEXIST))
+                goto out;
+        if ((mkdir(path, mode) == -1) && (errno != EEXIST))
+                rv = -1;
+        else
+                rv = 0;
+out:
+        if (up != NULL)
+              free(up);
+        free(q);
+        free(path);
+        return (rv);
 }
 
 static int xmp_mkdir(const char *path, mode_t mode)
@@ -252,7 +281,7 @@ static int xmp_mkdir_init(const char *path, mode_t mode)
 
 static int xmp_unlink(const char *path)
 {
-	int res;
+	//int res;
 	fprintf(stderr, "!unlink! %s\n", path);
 	//res = unlink(path);
 	//if (res == -1)
@@ -286,6 +315,12 @@ static int xmp_unlink(const char *path)
 	} 
 
 
+	/** CREANDO LAS CARPETAS EN RECYCLE **
+	char *tempCarpetaRec = (char *)calloc(strlen(pathRecycle)+strlen(acumulado)+1, sizeof(char));
+	strcpy(tempCarpetaRec, pathRecycle);
+	strcat(tempCarpetaRec, acumulado);
+	//mkpath(tempCarpetaRec, 0777);
+	/************************************/
 	fprintf(stderr, "\n\n");
 	fprintf(stderr, "*********************************************\n");
 	fprintf(stderr, "**   MOVIENDO A LA PAPELERA DE RECICLAJE   **\n");
@@ -296,6 +331,7 @@ static int xmp_unlink(const char *path)
 	
 	char pathRecycleArchivo[tamPathRecycle];
 	strcpy(pathRecycleArchivo, pathRecycle);
+	strcat(pathRecycleArchivo, "/");
 	strcat(pathRecycleArchivo, nombrearch);
 	fprintf(stderr, "\n'%s' -> '%s'\n\n", path, pathRecycleArchivo);
 
@@ -310,12 +346,15 @@ static int xmp_unlink(const char *path)
 	strcat(nuevalinea, "\n");
 	nuevalinea[tamNuevaL] = '\0';
 	int fd = open(archivo_log, O_WRONLY | O_APPEND);
+		fprintf(stderr, "Error 1\n");
 	if (fd == -1){
 			fprintf(stderr, "Error Abriendo Archivo!\n");
 			return -errno;
 	}
 	write(fd, nuevalinea, tamNuevaL);
+		fprintf(stderr, "Error 2\n");
 	close(fd);
+		fprintf(stderr, "Error 3\n");
 	tamanoBufferLog = tamanoBufferLog + tamNuevaL;
 	return 0;
 }
@@ -399,17 +438,17 @@ static int restaurarUnoAUno(char *linea, int tipo){
     int conteo = 1;
     int restaurar = 0;
     
-    int conteoBytesNuevoCSV = 0;
-    char *bufNuevoCSV = '\0';
-
+    char *bufNuevoCSV = (char *)calloc(tamanoBufferLog, sizeof(char));
+    strcpy(bufNuevoCSV, "");
     while ( ptrTokenInterno != NULL ) { 
         //fprintf(stderr, "@'%s' \n", ptrTokenInterno);
         	if(1 == conteo){
         		nombrearch = (char *)calloc(strlen(ptrTokenInterno)+1, sizeof(char));
         		strcpy(nombrearch, ptrTokenInterno);
 				
-				pathPapeleraArchivo = (char *)calloc(strlen(pathRecycle)+strlen(ptrTokenInterno)+1, sizeof(char));
+				pathPapeleraArchivo = (char *)calloc(strlen(pathRecycle)+1+strlen(ptrTokenInterno)+1, sizeof(char));
         		strcpy(pathPapeleraArchivo, pathRecycle);
+        		strcat(pathPapeleraArchivo, "/");
         		strcat(pathPapeleraArchivo, ptrTokenInterno);
 
         		//fprintf(stderr, "'%s' \n", pathPapeleraArchivo);
@@ -441,9 +480,16 @@ static int restaurarUnoAUno(char *linea, int tipo){
 					
         		}else{
         			// AGREGAR A NUEVO CSV
-        			bufNuevoCSV = (char *)realloc(bufNuevoCSV, 100);//strlen(bufNuevoCSV)+strlen(linea)+sizeof("\n")+1);
         			strcat(bufNuevoCSV, linea);
         			strcat(bufNuevoCSV, "\n");
+        			int fd = open(archivo_log, O_WRONLY | O_APPEND);
+					if (fd == -1){
+							fprintf(stderr, "Error Abriendo Archivo!\n");
+							return -errno;
+					}
+					write(fd, linea, strlen(linea));
+					write(fd, "\n", 1);
+					close(fd);
         		}
         		conteo = 1;
         		restaurar = 0;
@@ -461,6 +507,7 @@ static int xmp_truncate(const char *path, off_t size)
 	if (res == -1)
 		return -errno;*/
 	
+	unlink(path);
 	int tipo = 0;
 	if(size == 2){
 		// RESTAURAR TODO
@@ -482,7 +529,7 @@ static int xmp_truncate(const char *path, off_t size)
 	int res;
 	char *buf = (char *)calloc(tamanoBufferLog, sizeof(char));
 	int fd;
-	off_t offset;
+	//off_t offset;
 	fd = open(archivo_log, O_RDONLY);
 	if (fd == -1){
 		fprintf(stderr, "Error Abriendo Archivo!\n");
@@ -514,6 +561,12 @@ static int xmp_truncate(const char *path, off_t size)
         	conteoRegistros++;
         	ptrToken = strtok( NULL, "\n" );
 		}  
+	fd = open(archivo_log, O_TRUNC);
+	if (fd == -1){
+			fprintf(stderr, "Error Abriendo Archivo para Borrar!\n");
+			return -errno;
+	}
+	close(fd);
 	int i;
 	for (i = 0; i < conteoRegistros; i++)
 	{
@@ -683,8 +736,8 @@ static int xmp_removexattr(const char *path, const char *name)
 
 
 static void* xmp_init(struct fuse_conn_info *conn){
-	fchdir(save_dir);
-	close(save_dir);
+	//fchdir(save_dir);
+	//close(save_dir);
 	fprintf(stderr, "Inicializando...\n");
 	xmp_mkdir_init("/filesystem_201504429/usr",0777);
 	xmp_mkdir_init("/filesystem_201504429/usr/gustavo_gamboa",0777);
@@ -756,6 +809,6 @@ static struct fuse_operations xmp_oper = {
 int main(int argc, char *argv[])
 {
 	umask(0);
-	save_dir = open("/filesystem_201504429", 0);
+	//save_dir = open("/filesystem_201504429", 0);
 	return fuse_main(argc, argv, &xmp_oper, NULL);
 }
