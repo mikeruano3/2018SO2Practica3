@@ -61,6 +61,7 @@
 DIR *save_dir;
 int tamanoBufferLog = 0;
 char *archivo_log = "/home/miguel/Escritorio/log.csv";
+char *archivo_historial = "/home/miguel/Escritorio/historial.csv";
 char *pathRecycle = "/filesystem_201504429/recycle";
 char *ultimoPathAccedido;
 int NUM_REGISTROS_MAX = 1000;
@@ -346,16 +347,30 @@ static int xmp_unlink(const char *path)
 	strcat(nuevalinea, "\n");
 	nuevalinea[tamNuevaL] = '\0';
 	int fd = open(archivo_log, O_WRONLY | O_APPEND);
-		fprintf(stderr, "Error 1\n");
 	if (fd == -1){
-			fprintf(stderr, "Error Abriendo Archivo!\n");
+			fprintf(stderr, "Error Abriendo Archivo LOG!\n");
 			return -errno;
 	}
 	write(fd, nuevalinea, tamNuevaL);
-		fprintf(stderr, "Error 2\n");
 	close(fd);
-		fprintf(stderr, "Error 3\n");
 	tamanoBufferLog = tamanoBufferLog + tamNuevaL;
+
+	int fdh = open(archivo_historial, O_WRONLY | O_APPEND);
+	if (fdh == -1){
+			fprintf(stderr, "Error Abriendo Archivo Historial!\n");
+			return -errno;
+	}
+	char lineahis[tamNuevaL + sizeof(",ELIMINAR")];
+	strcpy(lineahis, nombrearch);
+	strcat(lineahis, ",");
+	strcat(lineahis, acumulado);
+	strcat(lineahis, ",");
+	strcat(lineahis, path);
+	strcat(lineahis, ",ELIMINAR");
+	strcat(lineahis, "\n");
+	lineahis[tamNuevaL + sizeof(",ELIMINAR")] = '\0';
+	write(fdh, lineahis, sizeof(lineahis) - 1);
+	close(fdh);
 	return 0;
 }
 
@@ -490,6 +505,17 @@ static int restaurarUnoAUno(char *linea, int tipo){
 					write(fd, linea, strlen(linea));
 					write(fd, "\n", 1);
 					close(fd);
+					int fdh = open(archivo_historial, O_WRONLY | O_APPEND);
+					if (fdh == -1){
+						fprintf(stderr, "Error Abriendo Archivo Historial!\n");
+						return -errno;
+					}
+					char lineahis[strlen(linea) + sizeof(",RESTAURAR")];
+					strcpy(lineahis, linea);
+					strcat(lineahis, ",RESTAURAR");
+					strcat(lineahis, "\n");
+					write(fdh, lineahis, sizeof(lineahis));
+					close(fdh);
         		}
         		conteo = 1;
         		restaurar = 0;
@@ -769,6 +795,12 @@ static void* xmp_init(struct fuse_conn_info *conn){
 		return 0;
 	}
 	close(fd_log);
+	int fd_his = creat(archivo_historial, 0777);
+	if(fd_his == -1){
+		fprintf(stderr, "Error creando archivo de historial \n");
+		return 0;
+	}
+	close(fd_his);
 	return 0;
 }
 
