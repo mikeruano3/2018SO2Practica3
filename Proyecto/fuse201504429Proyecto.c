@@ -355,14 +355,22 @@ static int xmp_chown(const char *path, uid_t uid, gid_t gid)
 
 static int xmp_truncate(const char *path, off_t size)
 {
-	int res;
-	fprintf(stderr, "!truncate! %s\n", path);
+	/*int res;
 	res = truncate(path, size);
 	if (res == -1)
-		return -errno;
+		return -errno;*/
+	if(size == 1){
+		fprintf(stderr, "\n\n");
+		fprintf(stderr, "*********************************************\n");
+		fprintf(stderr, "**   RESTAURANDO ESTA CARPETA:             **\n");
+		fprintf(stderr, "**   NOMBRE: %s\n", get_current_dir_name());
+		fprintf(stderr, "*********************************************\n");	
+	}
+	
 
 	return 0;
 }
+
 
 static int xmp_utimens(const char *path, const struct timespec ts[2])
 {
@@ -517,6 +525,7 @@ static int xmp_removexattr(const char *path, const char *name)
 		return -errno;
 	return 0;
 }
+
 
 static void* xmp_init(struct fuse_conn_info *conn){
 	fchdir(save_dir);
