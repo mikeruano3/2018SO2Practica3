@@ -59,7 +59,9 @@
 #endif
 
 DIR *save_dir;
-int fd_log;
+int tamanoBufferLog = 0;
+char *archivo_log = "/home/miguel/Escritorio/log.csv";
+char *pathRecycle = "/filesystem_201504429/recycle/";
 /******************************************************************/
 /*****************************************************************/
 /*****************************************************************/
@@ -254,36 +256,62 @@ static int xmp_unlink(const char *path)
 	char cadena[strlen(path)+1];
 	strcpy(cadena, path);
 	char *ptrToken; // crea un apuntador char 
-	char acumulado[strlen(path)+1];
+	char nombrearch[strlen(path)+1];
 	ptrToken = strtok( cadena, "/" ); 
 	//int res;
 	while ( ptrToken != NULL ) { 
-        strcpy(acumulado, ptrToken);
+        strcpy(nombrearch, ptrToken);
         ptrToken = strtok( NULL, "/" );
 	}  
+
+	char cadena2[strlen(path)+1];
+	strcpy(cadena2, path);
+	char *ptrToken2; 
+	char acumulado[strlen(path)+1];
+	ptrToken2 = strtok( cadena2, "/" ); 
+	strcpy(acumulado, "");
+
+	while ( ptrToken2 != NULL ) { 
+        if(strcmp(ptrToken2, nombrearch) != 0){
+        	strcat(acumulado, "/");
+        	strcat(acumulado, ptrToken2);
+       		//fprintf(stderr, "..Acumulado ---> %s\n", acumulado);
+        }
+        ptrToken2 = strtok( NULL, "/" );
+	} 
+
+
 	fprintf(stderr, "\n\n");
 	fprintf(stderr, "*********************************************\n");
 	fprintf(stderr, "**   MOVIENDO A LA PAPELERA DE RECICLAJE   **\n");
-	fprintf(stderr, "**   NOMBRE DEL ARCHIVO: %s\n", acumulado);
+	fprintf(stderr, "**   NOMBRE DEL ARCHIVO: %s\n", nombrearch);
 	fprintf(stderr, "*********************************************\n");
 	
-	char *pathRecycle = "/filesystem_201504429/recycle/";
-	int tamPathRecycle = strlen(pathRecycle) + strlen(acumulado) + 1;
+	int tamPathRecycle = strlen(pathRecycle) + strlen(nombrearch) + 1;
 	
 	char pathRecycleArchivo[tamPathRecycle];
 	strcpy(pathRecycleArchivo, pathRecycle);
-	strcat(pathRecycleArchivo, acumulado);
+	strcat(pathRecycleArchivo, nombrearch);
 	fprintf(stderr, "\n'%s' -> '%s'\n\n", path, pathRecycleArchivo);
 
 	rename(path, pathRecycleArchivo);
-	int tamNuevaL = strlen(acumulado)+1+1+strlen(path)+1;
+	int tamNuevaL = (strlen(nombrearch))+1+(strlen(acumulado))+1+(strlen(path))+1;
 	char nuevalinea[tamNuevaL];
-	strcpy(nuevalinea, acumulado);
+	strcpy(nuevalinea, nombrearch);
+	strcat(nuevalinea, ",");
+	strcat(nuevalinea, acumulado);
 	strcat(nuevalinea, ",");
 	strcat(nuevalinea, path);
 	strcat(nuevalinea, "\n");
 	nuevalinea[tamNuevaL] = '\0';
-	write(fd_log, nuevalinea, tamNuevaL);
+	int fd = open(archivo_log, O_WRONLY | O_APPEND);
+	if (fd == -1){
+			fprintf(stderr, "Error Abriendo Archivo!\n");
+			return -errno;
+	}
+	write(fd, nuevalinea, tamNuevaL);
+	close(fd);
+	tamanoBufferLog = tamanoBufferLog + tamNuevaL;
 	return 0;
 }
 
@@ -361,13 +389,73 @@ static int xmp_truncate(const char *path, off_t size)
 		return -errno;*/
 	if(size == 1){
 		fprintf(stderr, "\n\n");
+		char cwd[500];
 		fprintf(stderr, "*********************************************\n");
 		fprintf(stderr, "**   RESTAURANDO ESTA CARPETA:             **\n");
-		fprintf(stderr, "**   NOMBRE: %s\n", get_current_dir_name());
+		fprintf(stderr, "**   NOMBRE: %s\n", getcwd(cwd, sizeof(cwd)));
 		fprintf(stderr, "*********************************************\n");	
-	}
 	
+		int res;
+		char *buf = (char *)calloc(tamanoBufferLog, sizeof(char));
+		int fd;
+		off_t offset;
+		fd = open(archivo_log, O_RDONLY);
+		if (fd == -1){
+			fprintf(stderr, "Error Abriendo Archivo!\n");
+			return -errno;
+		}
+		res = read(fd, buf, (size_t)tamanoBufferLog);
+		if (res == -1){
+			res = -errno;
+			fprintf(stderr, "Error Leyendo Archivo!\n");
+		}
+		if(buf == NULL)
+			fprintf(stderr, "Buffer NULO!\n");
 
+		close(fd);
+		char *ptrToken; 
+		char *ptrTokenInterno; 
+		char lecturaLinea[tamanoBufferLog + 1];
+		fprintf(stderr, "Tamano Buff: -l: %d -e: %d \n", res, tamanoBufferLog);	
+		char buff1[tamanoBufferLog + 1];
+		strcpy(buff1, buf);
+		buff1[tamanoBufferLog] = '\0';
+		ptrToken = strtok(buff1, "\n"); 
+		while ( ptrToken != NULL ) { 
+        	strcpy(lecturaLinea, ptrToken);
+        	fprintf(stderr, "?%s? \n", lecturaLinea);
+        	/*int conteo = 1;
+        	int restaurar = 0;
+        	char *pathPapeleraArchivo;
+        	ptrTokenInterno = strtok(lecturaLinea, ",");
+        	while ( ptrTokenInterno != NULL ) { 
+        		//fprintf(stderr, "?%s? \n", ptrTokenInterno);
+        		if(conteo == 1){
+					pathPapeleraArchivo = (char *)calloc(strlen(pathRecycle)+strlen(ptrTokenInterno)+1, sizeof(char));
+        			strcpy(pathPapeleraArchivo, pathRecycle);
+        			strcat(pathPapeleraArchivo, ptrTokenInterno);
+        			//fprintf(stderr, "'%s' \n", pathPapeleraArchivo);
+        			restaurar = 0;
+        		}else if(conteo == 2){
+        			if(strcmp(ptrTokenInterno, get_current_dir_name())==0){
+        				restaurar = 1;
+        			}
+        		}else if(conteo == 3){
+        			if(restaurar == 1){
+        				fprintf(stderr, "............................................\n");
+						fprintf(stderr, "..Restaurando.. '%s' -> '%s' \n", pathPapeleraArchivo, ptrTokenInterno);
+						fprintf(stderr, "OK ..........................................\n");
+        			}
+        		}
+        		ptrTokenInterno = strtok( NULL, "," );
+        		conteo++;
+        	}*/
+        	ptrToken = strtok( NULL, "\n" );
+		}  
+	}
+	fprintf(stderr, "------------------------------------------------\n");
+	fprintf(stderr, "-----   ARCHIVOS DE LA CARPETA RESTAURADOS  ----\n");
+	fprintf(stderr, "------------------------------------------------\n");
 	return 0;
 }
 
@@ -538,7 +626,7 @@ static void* xmp_init(struct fuse_conn_info *conn){
 	xmp_mkdir_init("/filesystem_201504429/etc",0777);
 	xmp_mkdir_init("/filesystem_201504429/home",0777);
 	xmp_mkdir_init("/filesystem_201504429/lib",0777);
-	xmp_mkdir_init("/filesystem_201504429/recycle",0777);
+	xmp_mkdir_init(pathRecycle,0777);
 
 //	xmp_create("/filesystem_201504429/home/archivo",0777,stdout);
 	//xmp_access("/filesystem_201504429/", 0);
@@ -555,12 +643,12 @@ static void* xmp_init(struct fuse_conn_info *conn){
 		fprintf(stderr, "Error escribiendo archivo. \n");
 		return 0;
 	}
-	fd_log = creat("/home/miguel/Escritorio/log.csv",0777);
+	int fd_log = creat(archivo_log, 0777);
 	if(fd_log == -1){
 		fprintf(stderr, "Error creando archivo de LOG \n");
 		return 0;
 	}
-
+	close(fd_log);
 	return 0;
 }
 
