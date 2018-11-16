@@ -62,6 +62,8 @@ DIR *save_dir;
 int tamanoBufferLog = 0;
 char *archivo_log = "/home/miguel/Escritorio/log.csv";
 char *pathRecycle = "/filesystem_201504429/recycle/";
+char *ultimoPathAccedido;
+int NUM_REGISTROS_MAX = 1000;
 /******************************************************************/
 /*****************************************************************/
 /*****************************************************************/
@@ -82,12 +84,15 @@ static int xmp_access(const char *path, int mask)
 {
 	int res;
 	res = access(path, mask);
-	fprintf(stderr, "!access! %s\n", path);
+	fprintf(stderr, "!access! %s %d\n", path, mask);
 	if (res == -1){
 		fprintf(stderr, "Error de acceso a %s\n", path);
 		return -errno;
 	}
-
+	if(mask == 1){
+		ultimoPathAccedido = (char *) calloc(strlen(path), sizeof(char));
+		strcpy(ultimoPathAccedido, path);
+	}
 	return 0;
 }
 
@@ -381,81 +386,143 @@ static int xmp_chown(const char *path, uid_t uid, gid_t gid)
 	return 0;
 }
 
+static int restaurarUnoAUno(char *linea, int tipo){
+
+    char *nombrearch;
+    char *pathPapeleraArchivo;
+    char *pathAntiguo;
+
+    char *ptrTokenInterno; 
+    char *lecturaLinea = (char *)calloc(strlen(linea), sizeof(char));
+    strcpy(lecturaLinea, linea);
+    ptrTokenInterno = strtok(lecturaLinea, ",");
+    int conteo = 1;
+    int restaurar = 0;
+    
+    int conteoBytesNuevoCSV = 0;
+    char *bufNuevoCSV = '\0';
+
+    while ( ptrTokenInterno != NULL ) { 
+        //fprintf(stderr, "@'%s' \n", ptrTokenInterno);
+        	if(1 == conteo){
+        		nombrearch = (char *)calloc(strlen(ptrTokenInterno)+1, sizeof(char));
+        		strcpy(nombrearch, ptrTokenInterno);
+				
+				pathPapeleraArchivo = (char *)calloc(strlen(pathRecycle)+strlen(ptrTokenInterno)+1, sizeof(char));
+        		strcpy(pathPapeleraArchivo, pathRecycle);
+        		strcat(pathPapeleraArchivo, ptrTokenInterno);
+
+        		//fprintf(stderr, "'%s' \n", pathPapeleraArchivo);
+        		if(2 == tipo){
+        			// TODO
+        			restaurar = 1;
+        		}else if(1 == tipo){
+        			// Esperar a la siguiente comprobacion
+        			restaurar = 0;
+        		}
+        		
+        	}else if(2 == conteo){
+       			if(strcmp(ptrTokenInterno, ultimoPathAccedido)==0){
+        			restaurar = 1;
+        		}
+        	}else if(3 == conteo){
+        		if(restaurar == 1){        				
+        			pathAntiguo = (char *)calloc(strlen(ptrTokenInterno)+1, sizeof(char));
+        			strcpy(pathAntiguo, ptrTokenInterno);
+        			fprintf(stderr, "..............................................................\n");
+					fprintf(stderr, ".. Restaurando .. '%s' \n", nombrearch);
+					fprintf(stderr, "..   Moviendo .. '%s' -> '%s' \n", pathPapeleraArchivo, pathAntiguo);
+					int resultado = rename(pathPapeleraArchivo, pathAntiguo);
+					if(resultado == -1){
+						fprintf(stderr, ".. ERROR %d! ......................................................\n\n", -errno);
+					}else{
+						fprintf(stderr, ".. OK ! ......................................................\n\n");	
+					}
+					
+        		}else{
+        			// AGREGAR A NUEVO CSV
+        			bufNuevoCSV = (char *)realloc(bufNuevoCSV, 100);//strlen(bufNuevoCSV)+strlen(linea)+sizeof("\n")+1);
+        			strcat(bufNuevoCSV, linea);
+        			strcat(bufNuevoCSV, "\n");
+        		}
+        		conteo = 1;
+        		restaurar = 0;
+        	}
+        	conteo++;
+        ptrTokenInterno = strtok( NULL, ",");
+    }
+    return 0;
+}
+
 static int xmp_truncate(const char *path, off_t size)
 {
 	/*int res;
 	res = truncate(path, size);
 	if (res == -1)
 		return -errno;*/
-	if(size == 1){
-		fprintf(stderr, "\n\n");
-		char cwd[500];
-		fprintf(stderr, "*********************************************\n");
-		fprintf(stderr, "**   RESTAURANDO ESTA CARPETA:             **\n");
-		fprintf(stderr, "**   NOMBRE: %s\n", getcwd(cwd, sizeof(cwd)));
-		fprintf(stderr, "*********************************************\n");	
 	
-		int res;
-		char *buf = (char *)calloc(tamanoBufferLog, sizeof(char));
-		int fd;
-		off_t offset;
-		fd = open(archivo_log, O_RDONLY);
-		if (fd == -1){
-			fprintf(stderr, "Error Abriendo Archivo!\n");
-			return -errno;
-		}
-		res = read(fd, buf, (size_t)tamanoBufferLog);
-		if (res == -1){
-			res = -errno;
-			fprintf(stderr, "Error Leyendo Archivo!\n");
-		}
-		if(buf == NULL)
-			fprintf(stderr, "Buffer NULO!\n");
+	int tipo = 0;
+	if(size == 2){
+		// RESTAURAR TODO
+		tipo = 2;
+		fprintf(stderr, "\n\n\n");
+		fprintf(stderr, "***************************************************************\n");
+		fprintf(stderr, "**        RESTAURANDO TODO ...                               **\n");
+		fprintf(stderr, "***************************************************************\n");
+	}else{
+		// RESTAURAR SOLO ESTA CARPETA
+		tipo = 1;
+		fprintf(stderr, "\n\n\n");
+		fprintf(stderr, "***************************************************************\n");
+		fprintf(stderr, "**   RESTAURANDO ESTA CARPETA:                               **\n");
+		fprintf(stderr, "**   NOMBRE: %s\n", ultimoPathAccedido);
+		fprintf(stderr, "***************************************************************\n");
+	}
+	
+	int res;
+	char *buf = (char *)calloc(tamanoBufferLog, sizeof(char));
+	int fd;
+	off_t offset;
+	fd = open(archivo_log, O_RDONLY);
+	if (fd == -1){
+		fprintf(stderr, "Error Abriendo Archivo!\n");
+		return -errno;
+	}
+	res = read(fd, buf, (size_t)tamanoBufferLog);
+	if (res == -1){
+		res = -errno;
+		fprintf(stderr, "Error Leyendo Archivo!\n");
+	}
+	if(buf == NULL)
+		fprintf(stderr, "Buffer NULO!\n");
 
-		close(fd);
-		char *ptrToken; 
-		char *ptrTokenInterno; 
-		char lecturaLinea[tamanoBufferLog + 1];
-		fprintf(stderr, "Tamano Buff: -l: %d -e: %d \n", res, tamanoBufferLog);	
-		char buff1[tamanoBufferLog + 1];
-		strcpy(buff1, buf);
-		buff1[tamanoBufferLog] = '\0';
+	close(fd);
+	char *ptrToken; 
+
+	fprintf(stderr, "Tamano Buff: -l: %d -e: %d \n\n", res, tamanoBufferLog);	
+	char buff1[tamanoBufferLog + 1];
+
+	strcpy(buff1, buf);
+	buff1[tamanoBufferLog] = '\0';
+
+		char *registros[NUM_REGISTROS_MAX];
+		int conteoRegistros = 0;
 		ptrToken = strtok(buff1, "\n"); 
 		while ( ptrToken != NULL ) { 
-        	strcpy(lecturaLinea, ptrToken);
-        	fprintf(stderr, "?%s? \n", lecturaLinea);
-        	/*int conteo = 1;
-        	int restaurar = 0;
-        	char *pathPapeleraArchivo;
-        	ptrTokenInterno = strtok(lecturaLinea, ",");
-        	while ( ptrTokenInterno != NULL ) { 
-        		//fprintf(stderr, "?%s? \n", ptrTokenInterno);
-        		if(conteo == 1){
-					pathPapeleraArchivo = (char *)calloc(strlen(pathRecycle)+strlen(ptrTokenInterno)+1, sizeof(char));
-        			strcpy(pathPapeleraArchivo, pathRecycle);
-        			strcat(pathPapeleraArchivo, ptrTokenInterno);
-        			//fprintf(stderr, "'%s' \n", pathPapeleraArchivo);
-        			restaurar = 0;
-        		}else if(conteo == 2){
-        			if(strcmp(ptrTokenInterno, get_current_dir_name())==0){
-        				restaurar = 1;
-        			}
-        		}else if(conteo == 3){
-        			if(restaurar == 1){
-        				fprintf(stderr, "............................................\n");
-						fprintf(stderr, "..Restaurando.. '%s' -> '%s' \n", pathPapeleraArchivo, ptrTokenInterno);
-						fprintf(stderr, "OK ..........................................\n");
-        			}
-        		}
-        		ptrTokenInterno = strtok( NULL, "," );
-        		conteo++;
-        	}*/
+			registros[conteoRegistros] = (char *)calloc(strlen(ptrToken), sizeof(char));
+        	strcpy(registros[conteoRegistros], ptrToken);
+        	conteoRegistros++;
         	ptrToken = strtok( NULL, "\n" );
 		}  
+	int i;
+	for (i = 0; i < conteoRegistros; i++)
+	{
+		//fprintf(stderr, "?%s? \n", registros[i]);
+		restaurarUnoAUno(registros[i], tipo);
 	}
-	fprintf(stderr, "------------------------------------------------\n");
-	fprintf(stderr, "-----   ARCHIVOS DE LA CARPETA RESTAURADOS  ----\n");
-	fprintf(stderr, "------------------------------------------------\n");
+	fprintf(stderr, "\n***************************************************************\n");
+	fprintf(stderr, "-----   RECUPERACION EXITOSA !                               ----\n");
+	fprintf(stderr, "***************************************************************\n\n\n");
 	return 0;
 }
 

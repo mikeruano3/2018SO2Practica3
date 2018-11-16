@@ -1,2 +1,27 @@
+# creando y borrando archivos
+echo content>arch1.txt
+rm arch1.txt
+echo contenido>arch2.txt
+rm arch2.txt
+cd home/
+echo io>arch3.txt
+rm arch3.txt
+cd ..
+ls
+
+# entrando a la carpeta recycle
+cd recycle/
+ls
+cd ..
+
+# Recuperando desde carpeta actual
 truncate i --size 1
+
+#Recuperando desde home
+cd home/
+truncate i --size 1
+cd ..
+
+# Recuperando TODO
 truncate i --size 2
+
