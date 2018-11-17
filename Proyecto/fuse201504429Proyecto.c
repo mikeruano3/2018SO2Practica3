@@ -491,6 +491,17 @@ static int restaurarUnoAUno(char *linea, int tipo){
 						fprintf(stderr, ".. ERROR %d! ......................................................\n\n", -errno);
 					}else{
 						fprintf(stderr, ".. OK ! ......................................................\n\n");	
+						int fdh = open(archivo_historial, O_WRONLY | O_APPEND);
+						if (fdh == -1){
+							fprintf(stderr, "Error Abriendo Archivo Historial!\n");
+							return -errno;
+						}
+						char lineahis[strlen(linea) + sizeof(",RESTAURAR")];
+						strcpy(lineahis, linea);
+						strcat(lineahis, ",RESTAURAR");
+						strcat(lineahis, "\n");
+						write(fdh, lineahis, sizeof(lineahis));
+						close(fdh);
 					}
 					
         		}else{
@@ -505,17 +516,6 @@ static int restaurarUnoAUno(char *linea, int tipo){
 					write(fd, linea, strlen(linea));
 					write(fd, "\n", 1);
 					close(fd);
-					int fdh = open(archivo_historial, O_WRONLY | O_APPEND);
-					if (fdh == -1){
-						fprintf(stderr, "Error Abriendo Archivo Historial!\n");
-						return -errno;
-					}
-					char lineahis[strlen(linea) + sizeof(",RESTAURAR")];
-					strcpy(lineahis, linea);
-					strcat(lineahis, ",RESTAURAR");
-					strcat(lineahis, "\n");
-					write(fdh, lineahis, sizeof(lineahis));
-					close(fdh);
         		}
         		conteo = 1;
         		restaurar = 0;
