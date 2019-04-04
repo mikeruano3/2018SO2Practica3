@@ -62,14 +62,14 @@ DIR *save_dir;
 int tamanoBufferLog = 0;
 char *archivo_log = "/home/miguel/Escritorio/log.csv";
 char *archivo_historial = "/home/miguel/Escritorio/historial.csv";
-char *pathRecycle = "/filesystem_201504429/recycle";
+char *pathRecycle = "/filesystem_201503666/recycle";
 char *ultimoPathAccedido;
 int NUM_REGISTROS_MAX = 1000;
 /******************************************************************/
 /*****************************************************************/
 /*****************************************************************/
 
-//static const char *practica_path = "/filesystem_201504429";
+//static const char *practica_path = "/filesystem_201503666";
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
 	int res;
@@ -259,7 +259,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
 	*/
 
 	int res;
-	res = mkdir(path, mode);
+	res = rmkdir(path, mode);
 	if (res == -1){
 		fprintf(stderr, "Error creando directorio...%s\n", path);
 		return -errno;
@@ -765,21 +765,21 @@ static void* xmp_init(struct fuse_conn_info *conn){
 	//fchdir(save_dir);
 	//close(save_dir);
 	fprintf(stderr, "Inicializando...\n");
-	xmp_mkdir_init("/filesystem_201504429/usr",0777);
-	xmp_mkdir_init("/filesystem_201504429/usr/gustavo_gamboa",0777);
-	xmp_mkdir_init("/filesystem_201504429/usr/gustavo_gamboa/desktop",0777);
-	xmp_mkdir_init("/filesystem_201504429/tmp",0777);
-	xmp_mkdir_init("/filesystem_201504429/etc",0777);
-	xmp_mkdir_init("/filesystem_201504429/home",0777);
-	xmp_mkdir_init("/filesystem_201504429/lib",0777);
+	xmp_mkdir_init("/filesystem_201503666/usr",0777);
+	xmp_mkdir_init("/filesystem_201503666/usr/miguel_ruano",0777);
+	xmp_mkdir_init("/filesystem_201503666/usr/miguel_ruano/desktop",0777);
+	xmp_mkdir_init("/filesystem_201503666/tmp",0777);
+	xmp_mkdir_init("/filesystem_201503666/etc",0777);
+	xmp_mkdir_init("/filesystem_201503666/home",0777);
+	xmp_mkdir_init("/filesystem_201503666/lib",0777);
 	xmp_mkdir_init(pathRecycle,0777);
 
-//	xmp_create("/filesystem_201504429/home/archivo",0777,stdout);
-	//xmp_access("/filesystem_201504429/", 0);
+//	xmp_create("/filesystem_201503666/home/archivo",0777,stdout);
+	//xmp_access("/filesystem_201503666/", 0);
 	
-	const char *data = "Gustavo Adolfo Gamboa Cruz \n 201504429 \n";
+	const char *data = "Miguel Angel Omar Ruano Roca \n 201503666 \n";
 	int tamano = strlen(data);
-	int fd = creat("/filesystem_201504429/home/archivo",0777);
+	int fd = creat("/filesystem_201503666/home/archivo",0777);
 	if(fd == -1){
 		fprintf(stderr, "Error creando archivo. \n");
 		return 0;
@@ -841,6 +841,6 @@ static struct fuse_operations xmp_oper = {
 int main(int argc, char *argv[])
 {
 	umask(0);
-	//save_dir = open("/filesystem_201504429", 0);
+	//save_dir = open("/filesystem_201503666", 0);
 	return fuse_main(argc, argv, &xmp_oper, NULL);
 }

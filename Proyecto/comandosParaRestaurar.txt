@@ -6,7 +6,7 @@ rm arch2.txt
 
 
 cd usr/
-cd gustavo_gamboa/
+cd miguel_ruano/
 
 echo io>arch3.txt
 rm arch3.txt

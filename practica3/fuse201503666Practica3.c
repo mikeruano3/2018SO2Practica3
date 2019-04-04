@@ -46,7 +46,7 @@
 #ifdef HAVE_SETXATTR
 #include <sys/xattr.h>
 #endif
-//static const char *practica_path = "/filesystem_201504429";
+//static const char *practica_path = "/filesystem_201503666";
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
 	int res;
@@ -159,11 +159,83 @@ out:
 }
 
 
+
 static int xmp_mkdir(const char *path, mode_t mode)
 {
-	int res;
+	/*
+	fprintf(stderr, "!mkdir! %s\n", path);
+	char cadena[strlen(path)+1];
+	strcpy(cadena, path);
+	fprintf(stderr, ".............Creando directorios anidados............\n");
+	char *ptrToken; // crea un apuntador char 
+	char acumulado[strlen(path)+1];
+	ptrToken = strtok( cadena, "/" ); 
+	strcpy(acumulado, "");
+	int res, resacc, resmkd;
+	struct stat buf;
+	struct fuse *f;
+
+	while ( ptrToken != NULL ) { 
+	   	fprintf(stderr, "Analizando => %s\n", ptrToken );
+        strcat(acumulado, "/");
+        strcat(acumulado, ptrToken);
+	   	fprintf(stderr, "..Acumulado ---> %s\n", acumulado);
+		memset(&buf, 0, sizeof(buf));		
+		DIR* dir = opendir(acumulado);
+		if(dir)
+		{
+			closedir(dir);
+		}else if (ENOENT == errno)
+		{
+			resmkd = mkdir(acumulado, mode);
+			if (resmkd == -1){
+				fprintf(stderr, "Error creando directorio...%s\n", path);
+			}else{
+				fprintf(stderr, "Directorio creado...%s\n", path);
+			}
+		}else
+		{
+		
+
+		}
+		res = lstat(acumulado, &buf);
+		if (res == -1){
+			fprintf(stderr, "No existe el directorio...%s\n", path);
+			resmkd = mkdir(acumulado, mode);
+			if (resmkd == -1){
+				fprintf(stderr, "Error creando directorio...%s\n", path);
+			}else{
+				fprintf(stderr, "Directorio creado...%s\n", path);
+			}
+			resacc = access(acumulado, fuse_get_context()->umask);
+			if (resacc == -1){
+				fprintf(stderr, "Error de acceso a %s\n", path);
+			}
+		}else{
+			fprintf(stderr, "Existe...%s\n", acumulado);
+			resacc = access(acumulado, fuse_get_context()->umask);
+			if (resacc == -1){
+				fprintf(stderr, "Error de acceso a %s\n", path);
+			}
+		}
+		/ *res = access(acumulado, fuse_get_context()->umask);
+		fprintf(stderr, "!access! %s\n", path);
+		if (res == -1){
+			fprintf(stderr, "Error de acceso a %s\n", path);
+		}
+		res = mkdir(acumulado, mode);
+		if (res == -1){
+			fprintf(stderr, "Error creando directorio...%s\n", path);
+		}else{
+			fprintf(stderr, "Directorio creado...%s\n", path);
+		}
+        ptrToken = strtok( NULL, "/" );
+	} 
+	*/
+		int res;
 	res = mkdir(path, mode);
 	if (res == -1){
+		fprintf(stderr, "Error creando directorio...%s\n", path);
 		return -errno;
 	}
 	return 0;
@@ -421,19 +493,19 @@ static int xmp_removexattr(const char *path, const char *name)
 
 static void* xmp_init(struct fuse_conn_info *conn){
 	fprintf(stderr, "Inicializando...\n");
-	xmp_mkdir_init("/filesystem_201504429/usr",0777);
-	xmp_mkdir_init("/filesystem_201504429/usr/gustavo_gamboa",0777);
-	xmp_mkdir_init("/filesystem_201504429/usr/gustavo_gamboa/desktop",0777);
-	xmp_mkdir_init("/filesystem_201504429/tmp",0777);
-	xmp_mkdir_init("/filesystem_201504429/etc",0777);
-	xmp_mkdir_init("/filesystem_201504429/home",0777);
-	xmp_mkdir_init("/filesystem_201504429/lib",0777);
-//	xmp_create("/filesystem_201504429/home/archivo",0777,stdout);
-	xmp_access("/filesystem_201504429/", 0);
+	xmp_mkdir_init("/filesystem_201503666/usr",0777);
+	xmp_mkdir_init("/filesystem_201503666/usr/miguel_ruano",0777);
+	xmp_mkdir_init("/filesystem_201503666/usr/miguel_ruano/desktop",0777);
+	xmp_mkdir_init("/filesystem_201503666/tmp",0777);
+	xmp_mkdir_init("/filesystem_201503666/etc",0777);
+	xmp_mkdir_init("/filesystem_201503666/home",0777);
+	xmp_mkdir_init("/filesystem_201503666/lib",0777);
+//	xmp_create("/filesystem_201503666/home/archivo",0777,stdout);
+	xmp_access("/filesystem_201503666/", 0);
 	
-	const char *data = "Gustavo Adolfo Gamboa Cruz \n 201504429 \n";
+	const char *data = "Miguel Angel Omar Ruano \n 201503666 \n";
 	int tamano = strlen(data);
-	int fd = creat("/filesystem_201504429/home/archivo",0777);
+	int fd = creat("/filesystem_201503666/home/archivo",0777);
 	if(fd == -1){
 		fprintf(stderr, "Error creando archivo. \n");
 		return 0;
@@ -455,7 +527,7 @@ static struct fuse_operations xmp_oper = {
 	.readlink	= xmp_readlink,
 	.readdir	= xmp_readdir,
 	.mknod		= xmp_mknod,
-	.mkdir		= xmp_mkdir,
+	.mkdir		= xmp_mkdir_init,
 	.symlink	= xmp_symlink,
 	.unlink		= xmp_unlink,
 	.rmdir		= xmp_rmdir,
