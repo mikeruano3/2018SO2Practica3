@@ -259,7 +259,8 @@ static int xmp_mkdir(const char *path, mode_t mode)
 	*/
 
 	int res;
-	res = mkdir(path, mode);
+	//res = mkdir(path, mode);
+	res = system("mkdir -p %s", path);
 	fprintf(stderr, "!crear dir! %s\n", path);
 	if (res == -1){
 		fprintf(stderr, "Error creando directorio...%s\n", path);
