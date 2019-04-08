@@ -161,6 +161,7 @@ static int mkpath(const char *s, mode_t mode){
         char *q, *r = NULL, *path = NULL, *up = NULL;
         int rv;
         rv = -1;
+	fprintf(stderr, "!ANIDADO crear dir! %s -> %d\n", path, mode);
         if (strcmp(s, ".") == 0 || strcmp(s, "/") == 0)
                 return (0);
         if ((path = strdup(s)) == NULL)
@@ -260,7 +261,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
 
 	int res;
 	res = mkdir(path, mode);
-	fprintf(stderr, "!crear dir! %s\n", path);
+	fprintf(stderr, "!crear dir! %s -> %d\n", path, mode);
 	if (res == -1){
 		fprintf(stderr, "Error creando directorio...%s\n", path);
 		return -errno;
