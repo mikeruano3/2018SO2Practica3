@@ -296,11 +296,13 @@ static int xmp_unlink(const char *path)
 	char nombrearch[strlen(path)+1];
 	ptrToken = strtok( cadena, "/" ); 
 	//int res;
+	// extrayendo nombre del archivo
 	while ( ptrToken != NULL ) { 
         strcpy(nombrearch, ptrToken);
         ptrToken = strtok( NULL, "/" );
 	}  
 
+	//extrayendo ruta
 	char cadena2[strlen(path)+1];
 	strcpy(cadena2, path);
 	char *ptrToken2; 
@@ -338,7 +340,10 @@ static int xmp_unlink(const char *path)
 	strcat(pathRecycleArchivo, nombrearch);
 	fprintf(stderr, "\n'%s' -> '%s'\n\n", path, pathRecycleArchivo);
 
+	//Aqui muevo el archivo fisico
 	rename(path, pathRecycleArchivo);
+	
+	//Aqui agrego al historial
 	int tamNuevaL = (strlen(nombrearch))+1+(strlen(acumulado))+1+(strlen(path))+1;
 	char nuevalinea[tamNuevaL];
 	strcpy(nuevalinea, nombrearch);
